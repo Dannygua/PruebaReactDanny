@@ -7,35 +7,69 @@ import AddBooks from "./AddBooks";
 
 class Userbody extends React.Component{
 
+    //Declarar Variables
     state ={
         cards:[],
+        tempcards:[],
         searchText: '',
         searchedColumn: '',
         Activities: [],
         idUser:1,
         titleBook: "",
+        completed: true
     };
     async componentDidMount() {
+
+        //Codigo Para consumir api generada con symfony y apiplatform
+        {/*
+        this.setState({tempcards: await Task.getTasks()});
+        this.setState({cards: this.state.tempcards['hydra:member']});
+        */}
+
+        //Codigo para consumir api publica
         this.setState({cards: await Task.getTasks()});
         this.setState({Activities: await TaskActivities.getTasksActivities()})
     }
+
+    //Funcion: Para que funciones el Input
     handleChangeText = (es, input) =>{
         const newState = {};
         newState[input] = es.target.value;
         this.setState(newState);
     };
 
+    // Funcion: Buscar y Mostrar Id de Usuario
     handleClickFind = (es) =>{
         this.setState(state =>({ idUser: state.idUser = es}))
 
     };
+
+    //Funcion: Buscar y Mpstrar Tarea segun el id de Usuario
+    showTareas=async(userId)=>{
+        const tasks = await TaskActivities.getTasksActivities();
+        //console.log(this.state.arrTar);
+        const userTasks = [];
+        tasks.forEach((tarea)=>{
+            if(tarea.userId==userId){
+                userTasks.push(tarea);
+            }
+        })
+        this.setState({cards:userTasks})
+
+        this.setState({
+            visible: true,
+        });
+    }
+
+    //Funcion: Añadir Elementos al Arreglo
     handleAddTitle= () => {
         this.setState((currentState) => ({
             Activities: [
                     ...currentState.Activities,
                     {
                         title: currentState.titleBook,
-                        userId:currentState.idUser
+                        userId:currentState.idUser,
+                        completed:currentState.completed
                     }
                 ]
             })
@@ -45,7 +79,9 @@ class Userbody extends React.Component{
 
 
     render() {
-        const {cards, Activities, idUser,titleBook} = this.state;
+        //Declarar Todas las Variables en el const
+        const {cards, Activities, idUser,titleBook,completed} = this.state;
+        //Tabla de Usuarios
         const columns = [
             {
                 title: 'Id',
@@ -90,6 +126,7 @@ class Userbody extends React.Component{
 
             },
         ];
+        //Tabla de Actividades
         const columnsActivities = [
             {
                 title: 'USER ID',
@@ -126,14 +163,23 @@ class Userbody extends React.Component{
                     }
 
                 </div>
+
+                {/*
+                Mapear el arreglo y mostrar sus elementos
+                */}
                 <div className="task-item">
 
                     {
 
                         cards.map((item) => (
                             <div>
+                                <ol>
+                                    <li>{item.name}</li>
+                                    <li>{item.username}</li>
+                                    <li><Button type="primary" onClick={()=>this.showTareas(item.id)}>Ver tareas</Button></li>
+                                    <li><button onClick={()=> this.handleClickFind(item.id)}>Buscar ID Usuario</button></li>
+                                </ol>
 
-                                <button onClick={()=> this.handleClickFind(item.id)}>Buscar Actividades</button>
 
                             </div>
 
@@ -145,6 +191,16 @@ class Userbody extends React.Component{
                     {this.state.idUser}
 
                 </div>
+                <div>
+                    {this.state.cards.map((item)=>(
+
+
+                            <li>{item.title}</li>
+
+
+
+                    ))}
+                </div>
                 <h1>ACTIVIDADES</h1>
                 <div className="Task-table">
                     {
@@ -154,6 +210,7 @@ class Userbody extends React.Component{
                 <div className='actividad'>
                     <h1>ADD ACT</h1>
                     <input onChange={(es)=>this.handleChangeText(es, 'titleBook')} value={titleBook} />
+                    <input onChange={(es)=>this.handleChangeText(es, 'completed')} value={completed} />
                     <Button onClick={this.handleAddTitle}>Agregar</Button>
 
                 </div>
